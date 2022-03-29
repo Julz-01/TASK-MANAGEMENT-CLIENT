@@ -24,7 +24,12 @@
               @blur="$v.task.note.$touch()"
             ></v-text-field>
 
-            <v-btn color="success" class="mr-4 mt-2" @click="createTask()">
+            <v-btn
+              color="success"
+              class="mr-4 mt-2"
+              :disabled="task.name == '' ? true : false"
+              @click="createTask()"
+            >
               SAVE
             </v-btn>
           </v-form>
@@ -32,10 +37,24 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn color="primary" @click="logout()"> LOGOUT </v-btn>
+          <v-btn color="primary" :loading="isLoading" @click="logout()">
+            LOGOUT
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-col>
+    <v-snackbar
+      v-model="snackbar"
+      class="text-center"
+      :color="sb_color"
+      top
+      right
+      elevation="24"
+    >
+      <div>
+        {{ msg }}
+      </div>
+    </v-snackbar>
   </v-row>
 </template>
 
@@ -59,6 +78,10 @@ export default {
         name: "",
         note: "",
       },
+      snackbar: false,
+      sb_color: "",
+      msg: "",
+      isLoading: false,
     };
   },
   computed: {
@@ -79,15 +102,30 @@ export default {
   },
   methods: {
     async createTask() {
+      this.isLoading = true;
       try {
         const res = await this.$store.dispatch("task/createTask", this.task);
         if (res.status == 201) {
-          this.resetValidation();
+          this.msg = "SUCCESS!";
+          this.sb_color = "green darken-3";
+          this.snackbar = true;
+          this.isLoading = false;
+          await this.resetValidation();
         }
-      } catch (err) {}
+      } catch (err) {
+        this.msg = "SOMETHING WENT WRONG";
+        this.sb_color = "red";
+        this.snackbar = true;
+        this.isLoading = false;
+      }
     },
     async logout() {
-      await this.$store.dispatch("auth/logout");
+      this.isLoading = true;
+      try {
+        await this.$store.dispatch("auth/logout");
+      } catch (err) {
+        this.isLoading = false;
+      }
     },
     resetValidation() {
       this.$v.$reset();

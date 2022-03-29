@@ -25,15 +25,16 @@
               @blur="$v.creds.password.$touch()"
             ></v-text-field>
 
-            <v-btn color="success" class="mr-4 mt-2" @click="login()">
-              Validate
+            <v-btn
+              color="success"
+              class="mr-4 mt-2"
+              :loading="isLoading"
+              @click="login()"
+            >
+              LOGIN
             </v-btn>
           </v-form>
         </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn color="primary" nuxt to="/inspire"> Continue </v-btn>
-        </v-card-actions>
       </v-card>
       <v-snackbar
         v-model="snackbar"
@@ -41,6 +42,7 @@
         :color="sb_color"
         top
         right
+        elevation="24"
       >
         <div>
           {{ msg }}
@@ -55,6 +57,7 @@ import { validationMixin } from "vuelidate";
 import { required, minLength } from "vuelidate/lib/validators";
 
 export default {
+  middleware: "login-check",
   mixins: [validationMixin],
   validations: {
     creds: {
@@ -73,6 +76,7 @@ export default {
       snackbar: false,
       sb_color: "",
       msg: "",
+      isLoading: false,
     };
   },
   computed: {
@@ -93,11 +97,25 @@ export default {
   },
   methods: {
     async login() {
-      const res = await this.$store.dispatch("auth/login", this.creds);
-      if (res.status == 201) {
-        setInterval(() => {
-          this.$router.push("/user/dashboard");
-        }, 1500);
+      try {
+        this.isLoading = true;
+        const res = await this.$store.dispatch("auth/login", this.creds);
+        if (res.status === 201) {
+          this.msg = "SUCCESS!";
+          this.sb_color = "green darken-3";
+          this.snackbar = true;
+          this.isLoading = false;
+          setInterval(() => {
+            this.$router.push("/user/dashboard");
+          }, 1500);
+        }
+      } catch (err) {
+        if (err.response.status === 400) {
+          this.msg = err.response.data.message;
+          this.sb_color = "red";
+          this.snackbar = true;
+          this.isLoading = false;
+        }
       }
     },
   },
