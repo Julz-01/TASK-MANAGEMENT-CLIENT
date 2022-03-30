@@ -12,7 +12,13 @@
       </template>
       <template v-slot:item.actions="{ item }">
         <div class="d-inline-flex">
-          <v-btn color="green" class="mr-2" small @click="setAsDone(item.id)">
+          <v-btn
+            color="green"
+            :disabled="item.status == 1 ? true : false"
+            class="mr-2"
+            small
+            @click="setAsDone(item.id)"
+          >
             SET AS DONE
           </v-btn>
           <EditDialog :data="item" />
@@ -40,7 +46,6 @@ export default {
         {
           text: "Name",
           align: "start",
-          sortable: false,
           value: "name",
         },
         { text: "Note", value: "note" },
