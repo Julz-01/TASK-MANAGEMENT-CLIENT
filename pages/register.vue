@@ -1,11 +1,20 @@
 <template>
   <v-row justify="center" align="center">
     <v-col cols="12" sm="8" md="6">
-      <v-card class="logo py-4 d-flex justify-center"> LOGIN </v-card>
+      <v-card class="logo py-4 d-flex justify-center"> REGISTER </v-card>
       <v-card>
         <v-card-title class="headline"> </v-card-title>
         <v-card-text>
           <v-form ref="form" @keydown="error.clear()">
+            <v-text-field
+              v-model="creds.name"
+              :error-messages="nameErrors"
+              label="Name"
+              required
+              @input="$v.creds.name.$touch()"
+              @blur="$v.creds.name.$touch()"
+            ></v-text-field>
+
             <v-text-field
               v-model="creds.username"
               :error-messages="usernameErrors"
@@ -24,19 +33,8 @@
               @input="$v.creds.password.$touch()"
               @blur="$v.creds.password.$touch()"
             ></v-text-field>
-
-            <v-btn
-              color="success"
-              class="mr-4 mt-2"
-              :loading="isLoading"
-              @click="login()"
-            >
-              LOGIN
-            </v-btn>
-            <v-btn color="primary"
-            class="mr-4 mt-2"
-            to="/register">
-            REGISTER
+            <v-btn color="primary" class="mr-4 mt-2" @click="register()">
+              REGISTER
             </v-btn>
           </v-form>
         </v-card-text>
@@ -66,6 +64,7 @@ export default {
   mixins: [validationMixin],
   validations: {
     creds: {
+      name: { required, minLength: minLength(2) },
       username: { required, minLength: minLength(2) },
       password: { required },
     },
@@ -75,6 +74,7 @@ export default {
   data() {
     return {
       creds: {
+        name: "",
         username: "",
         password: "",
       },
@@ -85,6 +85,14 @@ export default {
     };
   },
   computed: {
+    nameErrors() {
+      const errors = [];
+      if (!this.$v.creds.name.$dirty) return errors;
+      !this.$v.creds.name.minLength &&
+        errors.push("name must be atleast 2 characters long");
+      !this.$v.creds.name.required && errors.push("Name is required.");
+      return errors;
+    },
     usernameErrors() {
       const errors = [];
       if (!this.$v.creds.username.$dirty) return errors;
@@ -101,17 +109,17 @@ export default {
     },
   },
   methods: {
-    async login() {
+    async register() {
       try {
         this.isLoading = true;
-        const res = await this.$store.dispatch("auth/login", this.creds);
+        const res = await this.$store.dispatch("auth/register", this.creds);
         if (res.status === 201) {
-          this.msg = "SUCCESS!";
+          this.msg = "SUCCESS!, REDIRECTING INTO LOGIN PAGE";
           this.sb_color = "green darken-3";
           this.snackbar = true;
           this.isLoading = false;
           setInterval(() => {
-            this.$router.push("/user/dashboard");
+            this.$router.push("/");
           }, 1500);
         }
       } catch (err) {

@@ -15,13 +15,18 @@ export default {
             return res;
 
         },
-        
+
         logout({ }) {
             localStorage.removeItem('access_token');
             setInterval(() => {
                 localStorage.removeItem("access_token");
                 location.href = "/";
             }, 1500);
+        },
+
+        async register({ }, payload) {
+            const res = await this.$repositories.auth.register(payload);
+            return res;
         }
     }
 }
